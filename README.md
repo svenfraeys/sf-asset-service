@@ -1,4 +1,4 @@
-# SFAsset Service
+# sf-asset-service
 
 this is the server side of SFAsset to auther, edit, query and delete assets
 
