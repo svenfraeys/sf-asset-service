@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 
 from . import models, schemas
+import logging
+
+logger = logging.getLogger(__name__)
 
 DATA_ROOT = "C:/sfasset_data"
 
@@ -31,17 +34,21 @@ def get_items(db: Session, skip: int = 0, limit: int = 100):
 
 
 def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
-    db_item = models.Item(**item.dict(), owner_id=user_id)
+    db_item = models.Item(**item.model_dump(), owner_id=user_id)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
     return db_item
 
 
-def get_spaces(db: Session, skip: int = 0, limit: int = 100, code: str = ""):
+def get_spaces(
+    db: Session, skip: int = 0, limit: int = 100, code: str = "", name: str = ""
+):
     query = db.query(models.Space)
     if code:
         query = query.filter(models.Space.code == code)
+    if name:
+        query = query.filter(models.Space.name == name)
     return query.offset(skip).limit(limit).all()
 
 
@@ -62,16 +69,31 @@ def get_entities(
     skip: int = 0,
     limit: int = 100,
     name: str = None,
-    space_id: int = None,
+    project_id: int = None,
     parent_id: int = None,
 ):
     query = db.query(models.Entity)
     if name:
         query = query.filter(models.Entity.name == name)
-    if space_id:
-        query = query.filter(models.Entity.space_id == space_id)
+    if project_id:
+        query = query.filter(models.Entity.project_id == project_id)
     if parent_id:
         query = query.filter(models.Entity.parent_id == parent_id)
+    return query.offset(skip).limit(limit).all()
+
+
+def get_projects(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: str = None,
+    space_id: int = None,
+):
+    query = db.query(models.Project)
+    if name:
+        query = query.filter(models.Project.name == name)
+    if space_id:
+        query = query.filter(models.Project.space_id == space_id)
     return query.offset(skip).limit(limit).all()
 
 
@@ -83,8 +105,16 @@ def get_entity_by_id(db: Session, id: int):
     return db.query(models.Entity).filter(models.Entity.id == id).first()
 
 
+def get_project_by_id(db: Session, id: int):
+    return db.query(models.Project).filter(models.Project.id == id).first()
+
+
 def get_entity_by_code(db: Session, code: str):
     return db.query(models.Entity).filter(models.Entity.code == code).first()
+
+
+def get_project_by_code(db: Session, code: str):
+    return db.query(models.Project).filter(models.Project.code == code).first()
 
 
 def create_entity(db: Session, entity: schemas.EntityCreate):
@@ -93,10 +123,10 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
     if entity.parent_id:
         parent_entity = get_entity_by_id(db, entity.parent_id)
         code = parent_entity.code + ":" + entity.name
-        entity.space_id = parent_entity.space_id
+        entity.project_id = parent_entity.project_id
     else:
-        space = get_space_by_id(db, entity.space_id)
-        code = space.code + "-" + entity.name
+        project = get_project_by_id(db, entity.project_id)
+        code = project.code + "-" + entity.name
 
     if get_entity_by_code(db, code):
         raise RuntimeError("Entity with code already exists")
@@ -104,8 +134,8 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
     if db_entity.parent_id == 0:
         db_entity.parent_id = None
 
-    if db_entity.space_id == 0:
-        db_entity.space_id = None
+    if db_entity.project_id == 0:
+        db_entity.project_id = None
 
     db_entity.code = code
 
@@ -115,15 +145,49 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
     return db_entity
 
 
+def create_project(db: Session, project: schemas.ProjectCreate):
+    db_project = models.Project(**project.dict())
+
+    space = get_space_by_id(db, project.space_id)
+    if not space:
+        raise RuntimeError("Space not found")
+    code = space.code + "-" + project.name
+
+    if get_project_by_code(db, code):
+        raise RuntimeError("project with code already exists")
+
+    if db_project.space_id == 0:
+        db_project.space_id = None
+
+    db_project.code = code
+
+    db.add(db_project)
+    db.commit()
+    db.refresh(db_project)
+    return db_project
+
+
 def get_asset_by_id(db: Session, id: int):
     return db.query(models.Asset).filter(models.Asset.id == id).first()
 
 
-def get_assets(db: Session, code: str = "", skip: int = 0, limit: int = 100):
+def get_assets(
+    db: Session,
+    code: str = "",
+    entity_id: int = 0,
+    name: str = None,
+    skip: int = 0,
+    limit: int = 100,
+):
     query = db.query(models.Asset)
     if code:
         query = query.filter(models.Asset.code == code)
 
+    if name:
+        query = query.filter(models.Asset.name == name)
+
+    if entity_id:
+        query = query.filter(models.Asset.entity_id == entity_id)
     return query.offset(skip).limit(limit).all()
 
 
@@ -146,8 +210,8 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
     db_asset = models.Asset(**asset.dict())
 
     entity = get_entity_by_id(db, asset.entity_id)
-    code = entity.code + "-" + asset.name
 
+    code = entity.code + "-" + asset.name
     if get_asset_by_code(db, code):
         raise RuntimeError("Asset with code already exists")
 
@@ -177,6 +241,22 @@ def get_asset_versions(
     return query.offset(skip).limit(limit).all()
 
 
+def update_asset_version(
+    db: Session, asset_version_id: int, asset_version: schemas.AssetVersion
+):
+    db_asset_version = get_asset_version_by_id(db, asset_version_id)
+    if not db_asset_version:
+        raise RuntimeError(f"AssetVersion not found with id {asset_version_id}")
+
+    db_asset_version.locked = asset_version.locked
+    db_asset_version.official = asset_version.official
+
+    db.add(db_asset_version)
+    db.commit()
+    db.refresh(db_asset_version)
+    return db_asset_version
+
+
 def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate):
     db_asset_version = models.AssetVersion(**asset_version.dict())
 
@@ -194,15 +274,15 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
     db_asset_version.name = str(total_asset_versions)
     entity_names = []
     entity = get_entity_by_id(db, asset.entity_id)
-    space = get_space_by_id(db, entity.space_id)
+    project = get_project_by_id(db, entity.project_id)
+    space = get_space_by_id(db, project.space_id)
+
     while entity:
         entity_names.append(entity.name)
         entity = get_entity_by_id(db, entity.parent_id)
     entity_names.reverse()
     entities_dirs = "/".join(entity_names)
-    db_asset_version.rel_data_dir = (
-        f"{space.code}/{entities_dirs}/{asset.name}/v{total_asset_versions}"
-    )
+    db_asset_version.rel_data_dir = f"{space.code}/{project.name}/{entities_dirs}/{asset.name}/v{total_asset_versions}"
     db_asset_version.data_dir = DATA_ROOT + "/" + db_asset_version.rel_data_dir
 
     db.add(db_asset_version)

@@ -32,3 +32,29 @@ def create_asset_version(
     asset_version: schemas.AssetVersionCreate, db: Session = Depends(get_db)
 ):
     return crud.create_asset_version(db=db, asset_version=asset_version)
+
+
+@router.put(
+    "/{asset_version_id}", response_model=schemas.AssetVersion, tags=["asset_versions"]
+)
+def update_asset_version(
+    asset_version_id: int,
+    asset_version: schemas.AssetVersion,
+    db: Session = Depends(get_db),
+):
+    return crud.update_asset_version(
+        db=db, asset_version_id=asset_version_id, asset_version=asset_version
+    )
+
+
+@router.get(
+    "/{asset_version_id}", response_model=schemas.AssetVersion, tags=["asset_versions"]
+)
+def get_asset_version(
+    asset_version_id: int,
+    db: Session = Depends(get_db),
+):
+    av = crud.get_asset_version_by_id(db=db, id=asset_version_id)
+    if not av:
+        raise HTTPException(status_code=404, detail="AssetVersion not found")
+    return av

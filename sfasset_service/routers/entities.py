@@ -18,12 +18,17 @@ def read_entities(
     skip: int = 0,
     limit: int = 100,
     name: str = None,
-    space_id: int = None,
+    project_id: int = None,
     parent_id: int = None,
     db: Session = Depends(get_db),
 ):
     items = crud.get_entities(
-        db, skip=skip, limit=limit, name=name, space_id=space_id, parent_id=parent_id
+        db,
+        skip=skip,
+        limit=limit,
+        name=name,
+        project_id=project_id,
+        parent_id=parent_id,
     )
     return items
 

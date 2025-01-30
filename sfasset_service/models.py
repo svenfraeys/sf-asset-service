@@ -31,7 +31,17 @@ class Space(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
     code = Column(String, index=True)
-    entities = relationship("Entity", back_populates="space")
+    projects = relationship("Project", back_populates="space")
+
+
+class Project(Base):
+    __tablename__ = "projects"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, index=True)
+    code = Column(String, index=True)
+    entities = relationship("Entity", back_populates="project")
+    space_id = Column(Integer, ForeignKey("spaces.id"))
+    space = relationship("Space", back_populates="projects")
 
 
 class Entity(Base):
@@ -39,8 +49,8 @@ class Entity(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
     code = Column(String, index=True)
-    space_id = Column(Integer, ForeignKey("spaces.id"))
-    space = relationship("Space", back_populates="entities")
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    project = relationship("Project", back_populates="entities")
     parent_id = Column(Integer, ForeignKey("entities.id"))
     parent = relationship("Entity", remote_side=[id])
     children = relationship("Entity", remote_side=[parent_id], uselist=True)
@@ -69,6 +79,8 @@ class AssetVersion(Base):
     rel_data_dir = Column(String, default="")
 
     asset_files = relationship("AssetFile", back_populates="asset_version")
+    locked = Column(Boolean, default=False)
+    official = Column(Boolean, default=False)
 
 
 class AssetFile(Base):

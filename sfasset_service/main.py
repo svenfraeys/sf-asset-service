@@ -2,12 +2,22 @@ from fastapi import Depends, FastAPI
 
 from .dependencies import get_query_token, get_token_header
 from .internal import admin
-from .routers import items, users, spaces, entities, assets, assetversions, assetfiles
+from .routers import (
+    items,
+    users,
+    spaces,
+    entities,
+    assets,
+    assetversions,
+    assetfiles,
+    projects,
+)
 from . import models
 from .database import engine
 
-models.Base.metadata.drop_all(bind=engine)
-models.Base.metadata.create_all(bind=engine)
+# to reset on refresh uncheck these lines
+# models.Base.metadata.drop_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine)
 
 
 # app = FastAPI(dependencies=[Depends(get_query_token)])
@@ -28,6 +38,7 @@ app.include_router(
 app.include_router(spaces.router)
 app.include_router(entities.router)
 app.include_router(assets.router)
+app.include_router(projects.router)
 
 
 @app.get("/")

@@ -15,9 +15,23 @@ class SpaceCreate(SpaceBase):
     pass
 
 
-class EntityBase(BaseModel):
+class ProjectBase(BaseModel):
     name: str
     space_id: int
+
+
+class Project(ProjectBase):
+    id: int
+    code: str
+
+
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class EntityBase(BaseModel):
+    name: str
+    project_id: int
     parent_id: Union[int, None] = None
 
 
@@ -54,6 +68,8 @@ class AssetVersion(AssetVersionBase):
     name: str
     data_dir: str
     rel_data_dir: str
+    locked: bool
+    official: bool
 
 
 class AssetVersionCreate(AssetVersionBase):
