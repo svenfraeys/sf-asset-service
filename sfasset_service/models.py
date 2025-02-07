@@ -42,6 +42,7 @@ class Project(Base):
     entities = relationship("Entity", back_populates="project")
     space_id = Column(Integer, ForeignKey("spaces.id"))
     space = relationship("Space", back_populates="projects")
+    assets = relationship("Asset", back_populates="project")
 
 
 class Entity(Base):
@@ -64,6 +65,9 @@ class Asset(Base):
     code = Column(String, index=True)
     entity_id = Column(Integer, ForeignKey("entities.id"))
     entity = relationship("Entity", back_populates="assets")
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    project = relationship("Project", back_populates="assets")
+
     asset_versions = relationship("AssetVersion", back_populates="asset")
     data_dir = Column(String)
 
@@ -77,6 +81,7 @@ class AssetVersion(Base):
     asset = relationship("Asset", back_populates="asset_versions")
     data_dir = Column(String, default="")
     rel_data_dir = Column(String, default="")
+    message = Column(String, default="")
 
     asset_files = relationship("AssetFile", back_populates="asset_version")
     locked = Column(Boolean, default=False)

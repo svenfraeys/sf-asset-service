@@ -20,10 +20,17 @@ def read_assets(
     code: str = None,
     name: str = None,
     entity_id: int = None,
+    project_id: int = None,
     db: Session = Depends(get_db),
 ):
     items = crud.get_assets(
-        db, skip=skip, limit=limit, code=code, name=name, entity_id=entity_id
+        db,
+        skip=skip,
+        limit=limit,
+        code=code,
+        name=name,
+        entity_id=entity_id,
+        project_id=project_id,
     )
     return items
 

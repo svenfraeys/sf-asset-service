@@ -52,6 +52,7 @@ class AssetBase(BaseModel):
 class Asset(AssetBase):
     id: int
     code: str
+    project_id: int
 
 
 class AssetCreate(AssetBase):
@@ -60,6 +61,7 @@ class AssetCreate(AssetBase):
 
 class AssetVersionBase(BaseModel):
     asset_id: int
+    message: str
 
 
 class AssetVersion(AssetVersionBase):

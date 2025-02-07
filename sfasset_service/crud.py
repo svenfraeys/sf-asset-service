@@ -6,6 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 DATA_ROOT = "C:/sfasset_data"
+MODEL_SEP = ":"
+ENTITY_SEP = "-"
+VERSION_SEP = "@"
 
 
 def get_user(db: Session, user_id: int):
@@ -71,6 +74,7 @@ def get_entities(
     name: str = None,
     project_id: int = None,
     parent_id: int = None,
+    code: str = None,
 ):
     query = db.query(models.Entity)
     if name:
@@ -79,6 +83,9 @@ def get_entities(
         query = query.filter(models.Entity.project_id == project_id)
     if parent_id:
         query = query.filter(models.Entity.parent_id == parent_id)
+    if code:
+        query = query.filter(models.Entity.code == code)
+
     return query.offset(skip).limit(limit).all()
 
 
@@ -122,11 +129,11 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
 
     if entity.parent_id:
         parent_entity = get_entity_by_id(db, entity.parent_id)
-        code = parent_entity.code + ":" + entity.name
+        code = parent_entity.code + ENTITY_SEP + entity.name
         entity.project_id = parent_entity.project_id
     else:
         project = get_project_by_id(db, entity.project_id)
-        code = project.code + "-" + entity.name
+        code = project.code + MODEL_SEP + entity.name
 
     if get_entity_by_code(db, code):
         raise RuntimeError("Entity with code already exists")
@@ -151,7 +158,7 @@ def create_project(db: Session, project: schemas.ProjectCreate):
     space = get_space_by_id(db, project.space_id)
     if not space:
         raise RuntimeError("Space not found")
-    code = space.code + "-" + project.name
+    code = space.code + MODEL_SEP + project.name
 
     if get_project_by_code(db, code):
         raise RuntimeError("project with code already exists")
@@ -175,6 +182,7 @@ def get_assets(
     db: Session,
     code: str = "",
     entity_id: int = 0,
+    project_id: str = 0,
     name: str = None,
     skip: int = 0,
     limit: int = 100,
@@ -188,6 +196,10 @@ def get_assets(
 
     if entity_id:
         query = query.filter(models.Asset.entity_id == entity_id)
+
+    if project_id:
+        query = query.filter(models.Asset.project_id == project_id)
+
     return query.offset(skip).limit(limit).all()
 
 
@@ -211,11 +223,12 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
 
     entity = get_entity_by_id(db, asset.entity_id)
 
-    code = entity.code + "-" + asset.name
+    code = entity.code + MODEL_SEP + asset.name
     if get_asset_by_code(db, code):
         raise RuntimeError("Asset with code already exists")
 
     db_asset.code = code
+    db_asset.project_id = entity.project_id
 
     db.add(db_asset)
     db.commit()
@@ -271,6 +284,7 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
         raise RuntimeError("AssetVersion with code already exists")
 
     db_asset_version.code = code
+    db_asset_version.message = asset_version.message
     db_asset_version.name = str(total_asset_versions)
     entity_names = []
     entity = get_entity_by_id(db, asset.entity_id)

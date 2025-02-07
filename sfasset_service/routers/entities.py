@@ -18,6 +18,7 @@ def read_entities(
     skip: int = 0,
     limit: int = 100,
     name: str = None,
+    code: str = None,
     project_id: int = None,
     parent_id: int = None,
     db: Session = Depends(get_db),
@@ -29,6 +30,7 @@ def read_entities(
         name=name,
         project_id=project_id,
         parent_id=parent_id,
+        code=code,
     )
     return items
 

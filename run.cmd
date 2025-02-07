@@ -1,0 +1,1 @@
+uvicorn sfasset_service.main:app --reload
