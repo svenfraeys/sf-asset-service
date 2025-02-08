@@ -19,10 +19,11 @@ def read_asset_versions(
     limit: int = 100,
     name: str = None,
     asset_id: int = None,
+    code: str = None,
     db: Session = Depends(get_db),
 ):
     items = crud.get_asset_versions(
-        db, skip=skip, limit=limit, name=name, asset_id=asset_id
+        db, skip=skip, limit=limit, name=name, asset_id=asset_id, code=code
     )
     return items
 

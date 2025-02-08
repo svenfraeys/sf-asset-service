@@ -183,6 +183,7 @@ def get_assets(
     code: str = "",
     entity_id: int = 0,
     project_id: str = 0,
+    id: int = 0,
     name: str = None,
     skip: int = 0,
     limit: int = 100,
@@ -199,6 +200,9 @@ def get_assets(
 
     if project_id:
         query = query.filter(models.Asset.project_id == project_id)
+
+    if id:
+        query = query.filter(models.Asset.id == id)
 
     return query.offset(skip).limit(limit).all()
 
@@ -243,14 +247,20 @@ def get_asset_version_by_code(db: Session, code: str):
 
 
 def get_asset_versions(
-    db: Session, skip: int = 0, limit: int = 100, name: str = None, asset_id: int = None
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: str = None,
+    asset_id: int = None,
+    code: str = None,
 ):
     query = db.query(models.AssetVersion)
     if name:
         query = query.filter(models.AssetVersion.name == name)
     if asset_id:
         query = query.filter(models.AssetVersion.asset_id == asset_id)
-
+    if code:
+        query = query.filter(models.AssetVersion.code == code)
     return query.offset(skip).limit(limit).all()
 
 
@@ -263,6 +273,9 @@ def update_asset_version(
 
     db_asset_version.locked = asset_version.locked
     db_asset_version.official = asset_version.official
+    # for input_id in asset_version.input_ids:
+    #     input_asset_version = get_asset_version_by_id(db, input_id)
+    #     db_asset_version.inputs.append(input_asset_version)
 
     db.add(db_asset_version)
     db.commit()

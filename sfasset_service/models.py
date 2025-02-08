@@ -2,6 +2,8 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 
 from .database import Base
+from typing import List
+from sqlalchemy.orm import Mapped
 
 
 class User(Base):
@@ -72,6 +74,14 @@ class Asset(Base):
     data_dir = Column(String)
 
 
+asset_version_inputs_table = Table(
+    "asset_version_inputs",
+    Base.metadata,
+    Column("asset_version_id", ForeignKey("asset_versions.id")),
+    Column("input_asset_version_id", ForeignKey("asset_versions.id")),
+)
+
+
 class AssetVersion(Base):
     __tablename__ = "asset_versions"
     id = Column(Integer, primary_key=True)
@@ -86,6 +96,16 @@ class AssetVersion(Base):
     asset_files = relationship("AssetFile", back_populates="asset_version")
     locked = Column(Boolean, default=False)
     official = Column(Boolean, default=False)
+    # inputs: Mapped[List["AssetVersion"]] = relationship(
+    #     secondary=asset_version_inputs_table, foreign_keys="input_asset_version_id"
+    # )
+    inputs = relationship(
+        "AssetVersion",
+        secondary=asset_version_inputs_table,
+        primaryjoin=id == asset_version_inputs_table.c.asset_version_id,
+        secondaryjoin=id == asset_version_inputs_table.c.input_asset_version_id,
+        # backref="related_to",
+    )
 
 
 class AssetFile(Base):
