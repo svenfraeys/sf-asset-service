@@ -11,6 +11,7 @@ from .routers import (
     assetversions,
     assetfiles,
     projects,
+    assetlinks,
 )
 from . import models
 from .database import engine
@@ -28,6 +29,8 @@ app.include_router(users.router)
 app.include_router(items.router)
 app.include_router(assetversions.router)
 app.include_router(assetfiles.router)
+app.include_router(assetlinks.router)
+
 app.include_router(
     admin.router,
     prefix="/admin",

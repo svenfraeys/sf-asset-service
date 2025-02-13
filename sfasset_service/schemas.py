@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Union
+from typing import Optional
 
 
 class SpaceBase(BaseModel):
@@ -90,6 +91,22 @@ class AssetFile(AssetFileBase):
 
 
 class AssetFileCreate(AssetFileBase):
+    pass
+
+
+class AssetLinkBase(BaseModel):
+    asset_version_id: int
+    target_asset_version_id: Optional[int] = None
+    name: str
+    dependency: bool
+    output: bool
+
+
+class AssetLink(AssetLinkBase):
+    id: int
+
+
+class AssetLinkCreate(AssetLinkBase):
     pass
 
 

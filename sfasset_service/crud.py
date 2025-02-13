@@ -207,17 +207,6 @@ def get_assets(
     return query.offset(skip).limit(limit).all()
 
 
-def get_asset_versions(
-    db: Session, skip: int = 0, limit: int = 100, name: str = None, asset_id: int = None
-):
-    query = db.query(models.AssetVersion)
-    if name:
-        query = query.filter(models.AssetVersion.name == name)
-    if asset_id:
-        query = query.filter(models.AssetVersion.asset_id == asset_id)
-    return query.offset(skip).limit(limit).all()
-
-
 def get_asset_by_code(db: Session, code: str):
     return db.query(models.Asset).filter(models.Asset.code == code).first()
 
@@ -253,6 +242,7 @@ def get_asset_versions(
     name: str = None,
     asset_id: int = None,
     code: str = None,
+    id: int = None,
 ):
     query = db.query(models.AssetVersion)
     if name:
@@ -261,6 +251,9 @@ def get_asset_versions(
         query = query.filter(models.AssetVersion.asset_id == asset_id)
     if code:
         query = query.filter(models.AssetVersion.code == code)
+    if id:
+        query = query.filter(models.AssetVersion.id == id)
+
     return query.offset(skip).limit(limit).all()
 
 
@@ -346,3 +339,40 @@ def create_asset_file(db: Session, asset_file: schemas.AssetFileCreate):
     db.commit()
     db.refresh(db_asset_file)
     return db_asset_file
+
+
+def get_asset_links(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: str = None,
+    id: int = 0,
+    asset_version_id: int = None,
+    target_asset_version_id: int = None,
+):
+    query = db.query(models.AssetLink)
+    if name:
+        query = query.filter(models.AssetLink.name == name)
+    if asset_version_id:
+        query = query.filter(models.AssetLink.asset_version_id == asset_version_id)
+    if target_asset_version_id:
+        query = query.filter(
+            models.AssetLink.target_asset_version_id == target_asset_version_id
+        )
+
+    if id:
+        query = query.filter(models.AssetLink.id == id)
+
+    return query.offset(skip).limit(limit).all()
+
+
+def create_asset_link(db: Session, asset_link: schemas.AssetLinkCreate):
+    asset_version = get_asset_version_by_id(db, asset_link.asset_version_id)
+    if not asset_version:
+        raise RuntimeError("could not find asset version")
+
+    db_asset_link = models.AssetLink(**asset_link.dict())
+    db.add(db_asset_link)
+    db.commit()
+    db.refresh(db_asset_link)
+    return db_asset_link

@@ -94,6 +94,17 @@ class AssetVersion(Base):
     message = Column(String, default="")
 
     asset_files = relationship("AssetFile", back_populates="asset_version")
+    asset_links = relationship(
+        "AssetLink",
+        back_populates="asset_version",
+        foreign_keys="[AssetLink.asset_version_id]",
+    )
+    source_asset_links = relationship(
+        "AssetLink",
+        back_populates="asset_version",
+        foreign_keys="[AssetLink.target_asset_version_id]",
+    )
+
     locked = Column(Boolean, default=False)
     official = Column(Boolean, default=False)
     # inputs: Mapped[List["AssetVersion"]] = relationship(
@@ -106,6 +117,28 @@ class AssetVersion(Base):
         secondaryjoin=id == asset_version_inputs_table.c.input_asset_version_id,
         # backref="related_to",
     )
+
+
+class AssetLink(Base):
+    __tablename__ = "asset_links"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, index=True)
+    asset_version_id = Column(Integer, ForeignKey("asset_versions.id"))
+    asset_version = relationship(
+        "AssetVersion", back_populates="asset_links", foreign_keys=[asset_version_id]
+    )
+
+    target_asset_version_id = Column(
+        Integer, ForeignKey("asset_versions.id"), default=None
+    )
+    target_asset_version = relationship(
+        "AssetVersion",
+        back_populates="source_asset_links",
+        foreign_keys=[target_asset_version_id],
+    )
+
+    dependency = Column(Boolean, default=False)
+    output = Column(Boolean, default=False)
 
 
 class AssetFile(Base):
