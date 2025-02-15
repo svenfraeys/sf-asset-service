@@ -20,6 +20,7 @@ def read_entities(
     name: str = None,
     code: str = None,
     project_id: int = None,
+    id: int = None,
     parent_id: int = None,
     db: Session = Depends(get_db),
 ):
@@ -31,6 +32,7 @@ def read_entities(
         project_id=project_id,
         parent_id=parent_id,
         code=code,
+        id=id,
     )
     return items
 

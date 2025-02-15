@@ -71,7 +71,20 @@ class Asset(Base):
     project = relationship("Project", back_populates="assets")
 
     asset_versions = relationship("AssetVersion", back_populates="asset")
+    branches = relationship("AssetBranch", back_populates="asset")
+
     data_dir = Column(String)
+
+
+class AssetBranch(Base):
+    __tablename__ = "asset_branches"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+    asset = relationship("Asset", back_populates="branches")
+    version_counter = Column(Integer, default=0)
+
+    asset_versions = relationship("AssetVersion", back_populates="branch")
 
 
 asset_version_inputs_table = Table(
@@ -89,6 +102,10 @@ class AssetVersion(Base):
     code = Column(String, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"))
     asset = relationship("Asset", back_populates="asset_versions")
+
+    branch_id = Column(Integer, ForeignKey("asset_branches.id"))
+    branch = relationship("AssetBranch", back_populates="asset_versions")
+
     data_dir = Column(String, default="")
     rel_data_dir = Column(String, default="")
     message = Column(String, default="")

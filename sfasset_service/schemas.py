@@ -60,9 +60,24 @@ class AssetCreate(AssetBase):
     pass
 
 
+class AssetBranchBase(BaseModel):
+    asset_id: int
+    name: str
+
+
+class AssetBranch(AssetBranchBase):
+    id: int
+    version_counter: int
+
+
+class AssetBranchCreate(AssetBranchBase):
+    pass
+
+
 class AssetVersionBase(BaseModel):
     asset_id: int
     message: str
+    branch_id: int
 
 
 class AssetVersion(AssetVersionBase):

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..dependencies import get_token_header, get_db
 from .. import schemas, crud
 from sqlalchemy.orm import Session
-
+from . import conf
 
 router = APIRouter(
     prefix="/asset_versions",
@@ -15,8 +15,8 @@ router = APIRouter(
 
 @router.get("/", response_model=list[schemas.AssetVersion], tags=["asset_versions"])
 def read_asset_versions(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = conf.SKIP,
+    limit: int = conf.LIMIT,
     name: str = None,
     asset_id: int = None,
     code: str = None,

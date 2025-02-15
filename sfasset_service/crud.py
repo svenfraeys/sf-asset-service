@@ -75,6 +75,7 @@ def get_entities(
     project_id: int = None,
     parent_id: int = None,
     code: str = None,
+    id: int = None,
 ):
     query = db.query(models.Entity)
     if name:
@@ -85,6 +86,8 @@ def get_entities(
         query = query.filter(models.Entity.parent_id == parent_id)
     if code:
         query = query.filter(models.Entity.code == code)
+    if id:
+        query = query.filter(models.Entity.id == id)
 
     return query.offset(skip).limit(limit).all()
 
@@ -174,6 +177,10 @@ def create_project(db: Session, project: schemas.ProjectCreate):
     return db_project
 
 
+def get_branch_by_id(db: Session, id: int):
+    return db.query(models.AssetBranch).filter(models.AssetBranch.id == id).first()
+
+
 def get_asset_by_id(db: Session, id: int):
     return db.query(models.Asset).filter(models.Asset.id == id).first()
 
@@ -212,7 +219,7 @@ def get_asset_by_code(db: Session, code: str):
 
 
 def create_asset(db: Session, asset: schemas.AssetCreate):
-    db_asset = models.Asset(**asset.dict())
+    db_asset = models.Asset(name=asset.name, entity_id=asset.entity_id)
 
     entity = get_entity_by_id(db, asset.entity_id)
 
@@ -226,6 +233,13 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
     db.add(db_asset)
     db.commit()
     db.refresh(db_asset)
+
+    # let s make a default main branch
+    db_branch = models.AssetBranch(asset_id=db_asset.id, name="main")
+    db.add(db_branch)
+    db.commit()
+    db.refresh(db_branch)
+
     return db_asset
 
 
@@ -233,6 +247,25 @@ def get_asset_version_by_code(db: Session, code: str):
     return (
         db.query(models.AssetVersion).filter(models.AssetVersion.code == code).first()
     )
+
+
+def get_asset_branches(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: str = None,
+    asset_id: int = None,
+    id: int = None,
+):
+    query = db.query(models.AssetBranch)
+    if name:
+        query = query.filter(models.AssetBranch.name == name)
+    if asset_id:
+        query = query.filter(models.AssetBranch.asset_id == asset_id)
+    if id:
+        query = query.filter(models.AssetBranch.id == id)
+
+    return query.offset(skip).limit(limit).all()
 
 
 def get_asset_versions(
@@ -276,22 +309,47 @@ def update_asset_version(
     return db_asset_version
 
 
+def create_asset_branch(db: Session, asset_branch: schemas.AssetBranchCreate):
+    assert not get_asset_branches(
+        db, asset_id=asset_branch.asset_id, name=asset_branch.name
+    )
+
+    asset = get_asset_by_id(db, asset_branch.asset_id)
+    assert asset, f"no asset found with id {asset_branch.asset_id}"
+
+    # let s make a default main branch
+    db_branch = models.AssetBranch(asset_id=asset.id, name=asset_branch.name)
+    db.add(db_branch)
+    db.commit()
+    db.refresh(db_branch)
+    return db_branch
+
+
 def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate):
     db_asset_version = models.AssetVersion(**asset_version.dict())
 
     asset = get_asset_by_id(db, asset_version.asset_id)
+    assert asset, f"no asset found with id {asset_version.asset_id}"
 
-    total_asset_versions = len(asset.asset_versions)
-    total_asset_versions += 1
-    db_asset_version.version = total_asset_versions
-    code = asset.code + "@" + str(total_asset_versions)
+    branch = get_branch_by_id(db, asset_version.branch_id)
+    assert branch, f"no branch found with id {asset_version.branch_id}"
+    branch.version_counter += 1
+    db.add(branch)
+    db.commit()
+    db.refresh(branch)
+
+    version_number = branch.version_counter
+    db_asset_version.version = version_number
+
+    code = f"{asset.code}@{branch.name}.{version_number}"
 
     if get_asset_version_by_code(db, code):
-        raise RuntimeError("AssetVersion with code already exists")
+        raise RuntimeError(f"AssetVersion with code already exists {code}")
 
+    db_asset_version.branch_id = branch.id
     db_asset_version.code = code
     db_asset_version.message = asset_version.message
-    db_asset_version.name = str(total_asset_versions)
+    db_asset_version.name = str(version_number)
     entity_names = []
     entity = get_entity_by_id(db, asset.entity_id)
     project = get_project_by_id(db, entity.project_id)
@@ -302,7 +360,7 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
         entity = get_entity_by_id(db, entity.parent_id)
     entity_names.reverse()
     entities_dirs = "/".join(entity_names)
-    db_asset_version.rel_data_dir = f"{space.code}/{project.name}/{entities_dirs}/{asset.name}/v{total_asset_versions}"
+    db_asset_version.rel_data_dir = f"{space.code}/{project.name}/{entities_dirs}/{asset.name}/{branch.name}.{version_number}"
     db_asset_version.data_dir = DATA_ROOT + "/" + db_asset_version.rel_data_dir
 
     db.add(db_asset_version)
