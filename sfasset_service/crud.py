@@ -276,6 +276,7 @@ def get_asset_versions(
     asset_id: int = None,
     code: str = None,
     id: int = None,
+    branch_id: int = None,
 ):
     query = db.query(models.AssetVersion)
     if name:
@@ -286,6 +287,8 @@ def get_asset_versions(
         query = query.filter(models.AssetVersion.code == code)
     if id:
         query = query.filter(models.AssetVersion.id == id)
+    if branch_id:
+        query = query.filter(models.AssetVersion.branch_id == branch_id)
 
     return query.offset(skip).limit(limit).all()
 
@@ -340,8 +343,8 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
 
     version_number = branch.version_counter
     db_asset_version.version = version_number
-
-    code = f"{asset.code}@{branch.name}.{version_number}"
+    name = f"{branch.name}.{version_number}"
+    code = f"{asset.code}@{name}"
 
     if get_asset_version_by_code(db, code):
         raise RuntimeError(f"AssetVersion with code already exists {code}")
@@ -349,7 +352,7 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
     db_asset_version.branch_id = branch.id
     db_asset_version.code = code
     db_asset_version.message = asset_version.message
-    db_asset_version.name = str(version_number)
+    db_asset_version.name = name
     entity_names = []
     entity = get_entity_by_id(db, asset.entity_id)
     project = get_project_by_id(db, entity.project_id)
