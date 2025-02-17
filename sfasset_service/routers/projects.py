@@ -18,10 +18,13 @@ def read_projects(
     skip: int = 0,
     limit: int = 100,
     name: str = None,
+    code: str = None,
     space_id: int = None,
     db: Session = Depends(get_db),
 ):
-    items = crud.get_projects(db, skip=skip, limit=limit, name=name, space_id=space_id)
+    items = crud.get_projects(
+        db, skip=skip, limit=limit, name=name, space_id=space_id, code=code
+    )
     return items
 
 

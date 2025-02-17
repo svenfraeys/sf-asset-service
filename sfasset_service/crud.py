@@ -97,6 +97,7 @@ def get_projects(
     skip: int = 0,
     limit: int = 100,
     name: str = None,
+    code: str = None,
     space_id: int = None,
 ):
     query = db.query(models.Project)
@@ -104,6 +105,9 @@ def get_projects(
         query = query.filter(models.Project.name == name)
     if space_id:
         query = query.filter(models.Project.space_id == space_id)
+    if code:
+        query = query.filter(models.Project.code == code)
+
     return query.offset(skip).limit(limit).all()
 
 
