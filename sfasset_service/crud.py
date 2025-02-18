@@ -229,7 +229,7 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
 
     code = entity.code + MODEL_SEP + asset.name
     if get_asset_by_code(db, code):
-        raise RuntimeError("Asset with code already exists")
+        raise RuntimeError(f"Asset with code {code} already exists")
 
     db_asset.code = code
     db_asset.project_id = entity.project_id
@@ -268,6 +268,28 @@ def get_asset_branches(
         query = query.filter(models.AssetBranch.asset_id == asset_id)
     if id:
         query = query.filter(models.AssetBranch.id == id)
+
+    return query.offset(skip).limit(limit).all()
+
+
+def get_asset_tags(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    name: str = None,
+    asset_id: int = None,
+    branch_id: int = None,
+    id: int = None,
+):
+    query = db.query(models.AssetTag)
+    if name:
+        query = query.filter(models.AssetTag.name == name)
+    if asset_id:
+        query = query.filter(models.AssetTag.asset_id == asset_id)
+    if id:
+        query = query.filter(models.AssetTag.id == id)
+    if branch_id:
+        query = query.filter(models.AssetTag.branch_id == branch_id)
 
     return query.offset(skip).limit(limit).all()
 
@@ -330,6 +352,30 @@ def create_asset_branch(db: Session, asset_branch: schemas.AssetBranchCreate):
     db.commit()
     db.refresh(db_branch)
     return db_branch
+
+
+def create_asset_tag(db: Session, asset_tag: schemas.AssetTagCreate):
+    assert not get_asset_tags(
+        db,
+        asset_id=asset_tag.asset_id,
+        name=asset_tag.name,
+        branch_id=asset_tag.branch_id,
+    )
+
+    asset = get_asset_by_id(db, asset_tag.asset_id)
+    assert asset, f"no asset found with id {asset_tag.asset_id}"
+
+    # let s make a default main branch
+    db_tag = models.AssetTag(
+        asset_id=asset.id,
+        name=asset_tag.name,
+        branch_id=asset_tag.branch_id,
+        asset_version_id=asset_tag.asset_version_id,
+    )
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+    return db_tag
 
 
 def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate):

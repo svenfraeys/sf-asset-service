@@ -13,6 +13,7 @@ from .routers import (
     projects,
     assetlinks,
     assetbranches,
+    assettags,
 )
 from . import models
 from .database import engine
@@ -32,6 +33,7 @@ app.include_router(assetversions.router)
 app.include_router(assetfiles.router)
 app.include_router(assetlinks.router)
 app.include_router(assetbranches.router)
+app.include_router(assettags.router)
 
 app.include_router(
     admin.router,

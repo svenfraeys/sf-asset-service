@@ -74,6 +74,21 @@ class AssetBranchCreate(AssetBranchBase):
     pass
 
 
+class AssetTagBase(BaseModel):
+    asset_id: int
+    asset_version_id: int
+    branch_id: int
+    name: str
+
+
+class AssetTag(AssetTagBase):
+    id: int
+
+
+class AssetTagCreate(AssetTagBase):
+    pass
+
+
 class AssetVersionBase(BaseModel):
     asset_id: int
     message: str

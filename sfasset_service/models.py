@@ -72,6 +72,7 @@ class Asset(Base):
 
     asset_versions = relationship("AssetVersion", back_populates="asset")
     branches = relationship("AssetBranch", back_populates="asset")
+    tags = relationship("AssetTag", back_populates="asset")
 
     data_dir = Column(String)
 
@@ -85,6 +86,8 @@ class AssetBranch(Base):
     version_counter = Column(Integer, default=0)
 
     asset_versions = relationship("AssetVersion", back_populates="branch")
+
+    tags = relationship("AssetTag", back_populates="branch")
 
 
 asset_version_inputs_table = Table(
@@ -110,6 +113,8 @@ class AssetVersion(Base):
     rel_data_dir = Column(String, default="")
     message = Column(String, default="")
 
+    asset_tags = relationship("AssetTag", back_populates="asset_version")
+
     asset_files = relationship("AssetFile", back_populates="asset_version")
     asset_links = relationship(
         "AssetLink",
@@ -121,6 +126,7 @@ class AssetVersion(Base):
         back_populates="asset_version",
         foreign_keys="[AssetLink.target_asset_version_id]",
     )
+    tags = relationship("AssetTag", back_populates="asset_version")
 
     locked = Column(Boolean, default=False)
     official = Column(Boolean, default=False)
@@ -134,6 +140,20 @@ class AssetVersion(Base):
         secondaryjoin=id == asset_version_inputs_table.c.input_asset_version_id,
         # backref="related_to",
     )
+
+
+class AssetTag(Base):
+    __tablename__ = "asset_tags"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+    asset = relationship("Asset", back_populates="tags")
+    asset_version_id = Column(Integer, ForeignKey("asset_versions.id"))
+    asset_version = relationship(
+        "AssetVersion", back_populates="tags", foreign_keys=[asset_version_id]
+    )
+    branch_id = Column(Integer, ForeignKey("asset_branches.id"))
+    branch = relationship("AssetBranch", back_populates="tags")
 
 
 class AssetLink(Base):
