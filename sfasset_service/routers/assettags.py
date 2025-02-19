@@ -20,6 +20,7 @@ def read_asset_tags(
     name: str = None,
     asset_id: int = None,
     branch_id: int = None,
+    asset_version_id: int = None,
     id: int = 0,
     db: Session = Depends(get_db),
 ):
@@ -31,6 +32,7 @@ def read_asset_tags(
         asset_id=asset_id,
         id=id,
         branch_id=branch_id,
+        asset_version_id=asset_version_id,
     )
     return items
 
@@ -38,3 +40,12 @@ def read_asset_tags(
 @router.post("/", response_model=schemas.AssetTag, tags=["asset_tags"])
 def create_asset_tag(asset_tag: schemas.AssetTagCreate, db: Session = Depends(get_db)):
     return crud.create_asset_tag(db=db, asset_tag=asset_tag)
+
+
+@router.put("/{asset_tag_id}", response_model=schemas.AssetTag, tags=["asset_tags"])
+def update_asset_tag(
+    asset_tag_id: int,
+    asset_tag: schemas.AssetTag,
+    db: Session = Depends(get_db),
+):
+    return crud.update_asset_tag(db=db, asset_tag_id=asset_tag_id, asset_tag=asset_tag)

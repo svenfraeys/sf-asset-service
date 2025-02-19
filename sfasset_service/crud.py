@@ -279,6 +279,7 @@ def get_asset_tags(
     name: str = None,
     asset_id: int = None,
     branch_id: int = None,
+    asset_version_id: int = None,
     id: int = None,
 ):
     query = db.query(models.AssetTag)
@@ -290,7 +291,8 @@ def get_asset_tags(
         query = query.filter(models.AssetTag.id == id)
     if branch_id:
         query = query.filter(models.AssetTag.branch_id == branch_id)
-
+    if asset_version_id:
+        query = query.filter(models.AssetTag.asset_version_id == asset_version_id)
     return query.offset(skip).limit(limit).all()
 
 
@@ -336,6 +338,18 @@ def update_asset_version(
     db.commit()
     db.refresh(db_asset_version)
     return db_asset_version
+
+
+def update_asset_tag(db: Session, asset_tag_id: int, asset_tag: schemas.AssetTag):
+    db_asset_tag = get_asset_tag_by_id(db, asset_tag_id)
+    if not db_asset_tag:
+        raise RuntimeError(f"AssetTag not found with id {asset_tag_id}")
+
+    db_asset_tag.asset_version_id = asset_tag.asset_version_id
+    db.add(db_asset_tag)
+    db.commit()
+    db.refresh(db_asset_tag)
+    return db_asset_tag
 
 
 def create_asset_branch(db: Session, asset_branch: schemas.AssetBranchCreate):
@@ -439,6 +453,10 @@ def get_asset_files(
 
 def get_asset_version_by_id(db: Session, id: int):
     return db.query(models.AssetVersion).filter(models.AssetVersion.id == id).first()
+
+
+def get_asset_tag_by_id(db: Session, id: int):
+    return db.query(models.AssetTag).filter(models.AssetTag.id == id).first()
 
 
 def create_asset_file(db: Session, asset_file: schemas.AssetFileCreate):
