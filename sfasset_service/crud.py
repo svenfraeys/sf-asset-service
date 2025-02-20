@@ -276,11 +276,11 @@ def get_asset_tags(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    asset_id: int = None,
-    branch_id: int = None,
-    asset_version_id: int = None,
-    id: int = None,
+    name: str = "",
+    asset_id: int = 0,
+    branch_id: int = 0,
+    asset_version_id: int = 0,
+    id: int = 0,
 ):
     query = db.query(models.AssetTag)
     if name:
