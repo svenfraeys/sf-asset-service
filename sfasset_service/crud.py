@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from fastapi import HTTPException
 from . import models, schemas
 import logging
 
@@ -9,6 +9,10 @@ DATA_ROOT = "C:/sfasset_data"
 MODEL_SEP = ":"
 ENTITY_SEP = "-"
 VERSION_SEP = "@"
+
+
+def rest_error(detail):
+    return HTTPException(status_code=400, detail=detail)
 
 
 def get_user(db: Session, user_id: int):
@@ -55,7 +59,7 @@ def get_spaces(
     return query.offset(skip).limit(limit).all()
 
 
-def create_space(db: Session, space: schemas.SpaceCreate, code=None):
+def create_space(db: Session, space: schemas.SpaceCreate, code: str = ""):
     db_space = models.Space(name=space.name, code=code)
     db.add(db_space)
     db.commit()
@@ -71,11 +75,11 @@ def get_entities(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    project_id: int = None,
-    parent_id: int = None,
-    code: str = None,
-    id: int = None,
+    name: str = "",
+    project_id: int = 0,
+    parent_id: int = 0,
+    code: str = "",
+    id: int = 0,
 ):
     query = db.query(models.Entity)
     if name:
@@ -96,9 +100,9 @@ def get_projects(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    code: str = None,
-    space_id: int = None,
+    name: str = "",
+    code: str = "",
+    space_id: int = 0,
 ):
     query = db.query(models.Project)
     if name:
@@ -143,7 +147,7 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
         code = project.code + MODEL_SEP + entity.name
 
     if get_entity_by_code(db, code):
-        raise RuntimeError("Entity with code already exists")
+        raise rest_error("Entity with code already exists")
 
     if db_entity.parent_id == 0:
         db_entity.parent_id = None
@@ -164,11 +168,11 @@ def create_project(db: Session, project: schemas.ProjectCreate):
 
     space = get_space_by_id(db, project.space_id)
     if not space:
-        raise RuntimeError("Space not found")
+        raise rest_error("Space not found")
     code = space.code + MODEL_SEP + project.name
 
     if get_project_by_code(db, code):
-        raise RuntimeError("project with code already exists")
+        raise rest_error("project with code already exists")
 
     if db_project.space_id == 0:
         db_project.space_id = None
@@ -193,9 +197,9 @@ def get_assets(
     db: Session,
     code: str = "",
     entity_id: int = 0,
-    project_id: str = 0,
+    project_id: int = 0,
     id: int = 0,
-    name: str = None,
+    name: str = "",
     skip: int = 0,
     limit: int = 100,
 ):
@@ -226,10 +230,12 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
     db_asset = models.Asset(name=asset.name, entity_id=asset.entity_id)
 
     entity = get_entity_by_id(db, asset.entity_id)
+    if not entity:
+        raise rest_error(f"Entity not found with id {asset.entity_id}")
 
     code = entity.code + MODEL_SEP + asset.name
     if get_asset_by_code(db, code):
-        raise RuntimeError(f"Asset with code {code} already exists")
+        raise rest_error(f"Asset with code {code} already exists")
 
     db_asset.code = code
     db_asset.project_id = entity.project_id
@@ -326,7 +332,7 @@ def update_asset_version(
 ):
     db_asset_version = get_asset_version_by_id(db, asset_version_id)
     if not db_asset_version:
-        raise RuntimeError(f"AssetVersion not found with id {asset_version_id}")
+        raise rest_error(detail=f"AssetVersion not found with id {asset_version_id}")
 
     db_asset_version.locked = asset_version.locked
     db_asset_version.official = asset_version.official
@@ -343,7 +349,7 @@ def update_asset_version(
 def update_asset_tag(db: Session, asset_tag_id: int, asset_tag: schemas.AssetTag):
     db_asset_tag = get_asset_tag_by_id(db, asset_tag_id)
     if not db_asset_tag:
-        raise RuntimeError(f"AssetTag not found with id {asset_tag_id}")
+        raise rest_error(f"AssetTag not found with id {asset_tag_id}")
 
     db_asset_tag.asset_version_id = asset_tag.asset_version_id
     db.add(db_asset_tag)
@@ -411,7 +417,7 @@ def create_asset_version(db: Session, asset_version: schemas.AssetVersionCreate)
     code = f"{asset.code}@{name}"
 
     if get_asset_version_by_code(db, code):
-        raise RuntimeError(f"AssetVersion with code already exists {code}")
+        raise rest_error(f"AssetVersion with code already exists {code}")
 
     db_asset_version.branch_id = branch.id
     db_asset_version.code = code
@@ -461,9 +467,14 @@ def get_asset_tag_by_id(db: Session, id: int):
 
 def create_asset_file(db: Session, asset_file: schemas.AssetFileCreate):
     asset_version = get_asset_version_by_id(db, asset_file.asset_version_id)
-    db_asset_file = models.AssetFile(**asset_file.dict())
-    db_asset_file.rel_path = asset_file.name
-    db_asset_file.path = asset_version.data_dir + "/" + asset_file.name
+    if not asset_version:
+        raise rest_error(
+            f"could not find asset version with id {asset_file.asset_version_id}"
+        )
+    db_asset_file = models.AssetFile()
+    db_asset_file.name = asset_file.name
+    db_asset_file.asset_version_id = asset_version.id
+
     db.add(db_asset_file)
     db.commit()
     db.refresh(db_asset_file)
@@ -498,7 +509,7 @@ def get_asset_links(
 def create_asset_link(db: Session, asset_link: schemas.AssetLinkCreate):
     asset_version = get_asset_version_by_id(db, asset_link.asset_version_id)
     if not asset_version:
-        raise RuntimeError("could not find asset version")
+        raise rest_error("could not find asset version")
 
     db_asset_link = models.AssetLink(**asset_link.dict())
     db.add(db_asset_link)

@@ -116,8 +116,6 @@ class AssetFileBase(BaseModel):
 
 class AssetFile(AssetFileBase):
     id: int
-    rel_path: str
-    path: str
 
 
 class AssetFileCreate(AssetFileBase):

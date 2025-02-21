@@ -184,5 +184,7 @@ class AssetFile(Base):
     name = Column(String, index=True)
     asset_version_id = Column(Integer, ForeignKey("asset_versions.id"))
     asset_version = relationship("AssetVersion", back_populates="asset_files")
+
+    # TODO: remove these
     path = Column(String, default="")
     rel_path = Column(String, default="")

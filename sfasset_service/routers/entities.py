@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from ..dependencies import get_token_header, get_db
+from ..dependencies import get_db
 from .. import schemas, crud
 from sqlalchemy.orm import Session
 
@@ -17,11 +17,11 @@ router = APIRouter(
 def read_entities(
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    code: str = None,
-    project_id: int = None,
-    id: int = None,
-    parent_id: int = None,
+    name: str = "",
+    code: str = "",
+    project_id: int = 0,
+    id: int = 0,
+    parent_id: int = 0,
     db: Session = Depends(get_db),
 ):
     items = crud.get_entities(

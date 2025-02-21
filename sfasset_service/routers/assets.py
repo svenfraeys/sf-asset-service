@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from ..dependencies import get_token_header, get_db
+from ..dependencies import get_db, get_token_header
 from .. import schemas, crud
 from sqlalchemy.orm import Session
 
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 router = APIRouter(
     prefix="/assets",
     tags=["assets"],
-    # dependencies=[Depends(get_token_header)],
+    dependencies=[Depends(get_token_header)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -17,11 +17,11 @@ router = APIRouter(
 def read_assets(
     skip: int = 0,
     limit: int = 100,
-    code: str = None,
-    name: str = None,
-    entity_id: int = None,
-    project_id: int = None,
-    id: int = None,
+    code: str = "",
+    name: str = "",
+    entity_id: int = 0,
+    project_id: int = 0,
+    id: int = 0,
     db: Session = Depends(get_db),
 ):
     items = crud.get_assets(

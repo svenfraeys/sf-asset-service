@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from ..dependencies import get_db
 from .. import schemas, crud
@@ -17,8 +17,8 @@ router = APIRouter(
 def read_asset_branches(
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    asset_id: int = None,
+    name: str = "",
+    asset_id: int = 0,
     id: int = 0,
     db: Session = Depends(get_db),
 ):

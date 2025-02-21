@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from ..dependencies import get_db
 from .. import schemas, crud
@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 router = APIRouter(
     prefix="/asset_tags",
     tags=["asset_tags"],
-    # dependencies=[Depends(get_token_header)],
     responses={404: {"description": "Not found"}},
 )
 
@@ -17,10 +16,10 @@ router = APIRouter(
 def read_asset_tags(
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    asset_id: int = None,
-    branch_id: int = None,
-    asset_version_id: int = None,
+    name: str = "",
+    asset_id: int = 0,
+    branch_id: int = 0,
+    asset_version_id: int = 0,
     id: int = 0,
     db: Session = Depends(get_db),
 ):
