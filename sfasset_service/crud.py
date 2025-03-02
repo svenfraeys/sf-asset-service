@@ -11,23 +11,23 @@ ENTITY_SEP = "-"
 VERSION_SEP = "@"
 
 
-def rest_error(detail):
+def rest_error(detail: str) -> HTTPException:
     return HTTPException(status_code=400, detail=detail)
 
 
-def get_user(db: Session, user_id: int):
+def get_user(db: Session, user_id: int) -> models.User | None:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_user_by_email(db: Session, email: str):
+def get_user_by_email(db: Session, email: str) -> models.User | None:
     return db.query(models.User).filter(models.User.email == email).first()
 
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> list[models.User]:
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate) -> models.User:
     fake_hashed_password = user.password + "notreallyhashed"
     db_user = models.User(email=user.email, hashed_password=fake_hashed_password)
     db.add(db_user)
@@ -36,11 +36,13 @@ def create_user(db: Session, user: schemas.UserCreate):
     return db_user
 
 
-def get_items(db: Session, skip: int = 0, limit: int = 100):
+def get_items(db: Session, skip: int = 0, limit: int = 100) -> list[models.Item]:
     return db.query(models.Item).offset(skip).limit(limit).all()
 
 
-def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
+def create_user_item(
+    db: Session, item: schemas.ItemCreate, user_id: int
+) -> models.Item:
     db_item = models.Item(**item.model_dump(), owner_id=user_id)
     db.add(db_item)
     db.commit()
@@ -50,7 +52,7 @@ def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
 
 def get_spaces(
     db: Session, skip: int = 0, limit: int = 100, code: str = "", name: str = ""
-):
+) -> list[models.Space]:
     query = db.query(models.Space)
     if code:
         query = query.filter(models.Space.code == code)
@@ -59,7 +61,9 @@ def get_spaces(
     return query.offset(skip).limit(limit).all()
 
 
-def create_space(db: Session, space: schemas.SpaceCreate, code: str = ""):
+def create_space(
+    db: Session, space: schemas.SpaceCreate, code: str = ""
+) -> models.Space:
     db_space = models.Space(name=space.name, code=code)
     db.add(db_space)
     db.commit()
@@ -67,7 +71,7 @@ def create_space(db: Session, space: schemas.SpaceCreate, code: str = ""):
     return db_space
 
 
-def get_space_by_code(db: Session, code: str):
+def get_space_by_code(db: Session, code: str) -> models.Space | None:
     return db.query(models.Space).filter(models.Space.code == code).first()
 
 
@@ -80,7 +84,7 @@ def get_entities(
     parent_id: int = 0,
     code: str = "",
     id: int = 0,
-):
+) -> list[models.Entity]:
     query = db.query(models.Entity)
     if name:
         query = query.filter(models.Entity.name == name)
@@ -103,7 +107,7 @@ def get_projects(
     name: str = "",
     code: str = "",
     space_id: int = 0,
-):
+) -> list[models.Project]:
     query = db.query(models.Project)
     if name:
         query = query.filter(models.Project.name == name)
@@ -115,33 +119,35 @@ def get_projects(
     return query.offset(skip).limit(limit).all()
 
 
-def get_space_by_id(db: Session, id: int):
+def get_space_by_id(db: Session, id: int) -> models.Space | None:
     return db.query(models.Space).filter(models.Space.id == id).first()
 
 
-def get_entity_by_id(db: Session, id: int):
+def get_entity_by_id(db: Session, id: int) -> models.Entity | None:
     return db.query(models.Entity).filter(models.Entity.id == id).first()
 
 
-def get_project_by_id(db: Session, id: int):
+def get_project_by_id(db: Session, id: int) -> models.Project | None:
     return db.query(models.Project).filter(models.Project.id == id).first()
 
 
-def get_entity_by_code(db: Session, code: str):
+def get_entity_by_code(db: Session, code: str) -> models.Entity | None:
     return db.query(models.Entity).filter(models.Entity.code == code).first()
 
 
-def get_project_by_code(db: Session, code: str):
+def get_project_by_code(db: Session, code: str) -> models.Project | None:
     return db.query(models.Project).filter(models.Project.code == code).first()
 
 
-def create_entity(db: Session, entity: schemas.EntityCreate):
-    db_entity = models.Entity(**entity.dict())
+def create_entity(db: Session, entity: schemas.EntityCreate) -> models.Entity:
+    db_entity = models.Entity(**entity.model_dump())
 
     if entity.parent_id:
         parent_entity = get_entity_by_id(db, entity.parent_id)
+        if not parent_entity:
+            raise rest_error("could not find parent entity")
         code = parent_entity.code + ENTITY_SEP + entity.name
-        entity.project_id = parent_entity.project_id
+        db_entity.project_id = parent_entity.project_id
     else:
         project = get_project_by_id(db, entity.project_id)
         code = project.code + MODEL_SEP + entity.name
@@ -155,7 +161,7 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
     if db_entity.project_id == 0:
         db_entity.project_id = None
 
-    db_entity.code = code
+    db_entity.code = str(code)
 
     db.add(db_entity)
     db.commit()
@@ -164,7 +170,7 @@ def create_entity(db: Session, entity: schemas.EntityCreate):
 
 
 def create_project(db: Session, project: schemas.ProjectCreate):
-    db_project = models.Project(**project.dict())
+    db_project = models.Project(**project.model_dump())
 
     space = get_space_by_id(db, project.space_id)
     if not space:
@@ -234,10 +240,10 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
         raise rest_error(f"Entity not found with id {asset.entity_id}")
 
     code = entity.code + MODEL_SEP + asset.name
-    if get_asset_by_code(db, code):
+    if get_asset_by_code(db, str(code)):
         raise rest_error(f"Asset with code {code} already exists")
 
-    db_asset.code = code
+    db_asset.code = str(code)
     db_asset.project_id = entity.project_id
 
     db.add(db_asset)
