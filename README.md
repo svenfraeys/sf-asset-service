@@ -12,10 +12,11 @@ pip install .
 
 After that you will have to install the database models
 
-Run this script to drop and install the table
+Run this script to drop and install the database table and run the install
 
 ```
-python dbreset.py
+sfassetservice initdb
+sfassetservice install
 ```
 
 ## Running the application for development
