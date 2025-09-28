@@ -1,10 +1,10 @@
 # sf-asset-service
 
-this is the server side of SFAsset to auther, edit, query and delete assets
+sfassetservice is a REST api that allows you to author, edit, query and delete digital assets
 
 ## Installation
 
-inside the directory run pip install
+Inside the directory run pip install
 
 ```
 pip install .
@@ -12,7 +12,7 @@ pip install .
 
 After that you will have to install the database models
 
-Run this script to drop and install the database table and run the install
+Run this script to install the database tables and do any additional installation needed
 
 ```
 sfassetservice initdb
