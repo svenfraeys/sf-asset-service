@@ -33,8 +33,8 @@ class Entity(Base):
     project_id = Column(Integer, ForeignKey("projects.id"))
     project = relationship("Project", back_populates="entities")
     parent_id = Column(Integer, ForeignKey("entities.id"))
-    parent = relationship("Entity", remote_side=[id])
-    children = relationship("Entity", remote_side=[parent_id], uselist=True)
+    parent = relationship("Entity", remote_side=[id], backref="children")
+    # children = relationship("Entity", remote_side=[parent_id], uselist=True)
     assets = relationship("Asset", back_populates="entity")
 
 
@@ -75,6 +75,13 @@ asset_version_inputs_table = Table(
     Column("input_asset_version_id", ForeignKey("asset_versions.id")),
 )
 
+version_tag_association = Table(
+    "asset_asset_tag",
+    Base.metadata,
+    Column("asset_version_id", Integer, ForeignKey("asset_versions.id")),
+    Column("asset_tag_id", Integer, ForeignKey("asset_tags.id")),
+)
+
 
 class AssetVersion(Base):
     __tablename__ = "asset_versions"
@@ -91,7 +98,11 @@ class AssetVersion(Base):
     rel_data_dir = Column(String, default="")
     message = Column(String, default="")
 
-    asset_tags = relationship("AssetTag", back_populates="asset_version")
+    tags = relationship(
+        "AssetTag",
+        secondary=version_tag_association,
+        back_populates="asset_versions",
+    )
 
     asset_files = relationship("AssetFile", back_populates="asset_version")
     asset_links = relationship(
@@ -104,7 +115,6 @@ class AssetVersion(Base):
         back_populates="asset_version",
         foreign_keys="[AssetLink.target_asset_version_id]",
     )
-    tags = relationship("AssetTag", back_populates="asset_version")
 
     locked = Column(Boolean, default=False)
     official = Column(Boolean, default=False)
@@ -132,6 +142,10 @@ class AssetTag(Base):
     )
     branch_id = Column(Integer, ForeignKey("asset_branches.id"))
     branch = relationship("AssetBranch", back_populates="tags")
+
+    asset_versions = relationship(
+        "AssetVersion", secondary=version_tag_association, back_populates="tags"
+    )
 
 
 class AssetLink(Base):
