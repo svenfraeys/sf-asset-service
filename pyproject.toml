@@ -11,10 +11,11 @@ dependencies = [
   "SQLAlchemy",
   "psycopg2",
   "click",
-  "dotenv"
+  "dotenv",
+  "httpx",
 ]
 requires-python = ">=3.8"
-description = "SF Asset Service for storign digital assets for productions"
+description = "SF Asset Service for storing digital assets for productions"
 readme = "README.md"
 authors = [
     { name = "Sven Fraeys", email = "sven.fraeys@gmail.com" },
