@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sfasset_service"
+dynamic = ["version"]
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "SQLAlchemy",
+  "psycopg2"
+]
+requires-python = ">=3.8"
+description = "SF Asset Service for storign digital assets for productions"
+readme = "README.md"
+authors = [
+    { name = "Sven Fraeys", email = "sven.fraeys@gmail.com" },
+]
