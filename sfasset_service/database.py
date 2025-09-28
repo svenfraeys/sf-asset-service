@@ -7,9 +7,9 @@ from sqlalchemy.engine import URL
 SQLALCHEMY_DATABASE_URL = URL.create(
     drivername="postgresql",
     username=os.getenv("DB_USERNAME", "postgres"),
-    password=os.getenv("DB_USERNAME", "root"),
-    host=os.getenv("DB_USERNAME", "localhost"),
-    database=os.getenv("DB_USERNAME", "sfpd"),
+    password=os.getenv("DB_PASSWORD", "root"),
+    host=os.getenv("DB_HOST", "localhost"),
+    database=os.getenv("DB_NAME", "sfpd"),
     port=int(os.getenv("DB_PORT", "5432")),
 )
 

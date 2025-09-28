@@ -3,22 +3,8 @@ from typing import Union
 from typing import Optional
 
 
-class SpaceBase(BaseModel):
-    name: str
-
-
-class Space(SpaceBase):
-    id: int
-    code: str
-
-
-class SpaceCreate(SpaceBase):
-    pass
-
-
 class ProjectBase(BaseModel):
     name: str
-    space_id: int
 
 
 class Project(ProjectBase):

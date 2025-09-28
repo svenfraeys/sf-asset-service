@@ -5,7 +5,6 @@ from .internal import admin
 from .routers import (
     items,
     users,
-    spaces,
     entities,
     assets,
     assetversions,
@@ -41,7 +40,6 @@ app.include_router(
     dependencies=[Depends(get_token_header)],
     responses={418: {"description": "I'm a teapot"}},
 )
-app.include_router(spaces.router)
 app.include_router(entities.router)
 app.include_router(assets.router)
 app.include_router(projects.router)

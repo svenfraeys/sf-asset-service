@@ -14,26 +14,6 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     first_name = Column(String)
-    items = relationship("Item", back_populates="owner")
-
-
-class Item(Base):
-    __tablename__ = "items"
-
-    id = Column(Integer, primary_key=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
-    owner_id = Column(Integer, ForeignKey("users.id"))
-
-    owner = relationship("User", back_populates="items")
-
-
-class Space(Base):
-    __tablename__ = "spaces"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, index=True)
-    code = Column(String, index=True)
-    projects = relationship("Project", back_populates="space")
 
 
 class Project(Base):
@@ -42,8 +22,6 @@ class Project(Base):
     name = Column(String, index=True)
     code = Column(String, index=True)
     entities = relationship("Entity", back_populates="project")
-    space_id = Column(Integer, ForeignKey("spaces.id"))
-    space = relationship("Space", back_populates="projects")
     assets = relationship("Asset", back_populates="project")
 
 
