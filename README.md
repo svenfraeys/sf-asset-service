@@ -1,6 +1,7 @@
 # sf-asset-service
 
-sfassetservice is a REST api that allows you to author, edit, query and delete digital assets
+sfassetservice is a REST API that allows you to author, edit, query and delete digital assets.
+This repository is experimental and and can be used as reference.
 
 ## Installation
 

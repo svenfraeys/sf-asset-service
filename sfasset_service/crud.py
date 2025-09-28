@@ -269,9 +269,9 @@ def get_asset_branches(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    asset_id: int = None,
-    id: int = None,
+    name: str | None = None,
+    asset_id: int | None = None,
+    id: int | None = None,
 ):
     query = db.query(models.AssetBranch)
     if name:
@@ -288,7 +288,7 @@ def get_asset_tags(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = "",
+    name: str | None = None,
     asset_id: int = 0,
     branch_id: int = 0,
     asset_version_id: int = 0,
@@ -312,11 +312,11 @@ def get_asset_versions(
     db: Session,
     skip: int = 0,
     limit: int = 100,
-    name: str = None,
-    asset_id: int = None,
-    code: str = None,
-    id: int = None,
-    branch_id: int = None,
+    name: str | None = None,
+    asset_id: int | None = None,
+    code: str | None = None,
+    id: int | None = None,
+    branch_id: int | None = None,
 ):
     query = db.query(models.AssetVersion)
     if name:
