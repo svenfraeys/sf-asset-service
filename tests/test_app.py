@@ -1,3 +1,4 @@
+import uuid
 from fastapi.testclient import TestClient
 
 from sfasset_service.main import app
@@ -11,11 +12,13 @@ def test_app():
 
 
 def test_create_project():
+    name = str(uuid.uuid4()).replace("-", "")
     response = client.post(
         "/projects/",
-        json={"name": "test"},
+        json={"name": name},
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "test"
+    assert data["name"] == name
+    assert data["code"] == name
     assert "id" in data
