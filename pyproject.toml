@@ -10,7 +10,8 @@ dependencies = [
   "uvicorn",
   "SQLAlchemy",
   "psycopg2",
-  "click"
+  "click",
+  "dotenv"
 ]
 requires-python = ">=3.8"
 description = "SF Asset Service for storign digital assets for productions"

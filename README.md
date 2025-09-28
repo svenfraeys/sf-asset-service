@@ -3,13 +3,28 @@
 sfassetservice is a REST API that allows you to author, edit, query and delete digital assets.
 This repository is experimental and and can be used as reference.
 
-## Installation
+## Setup
 
 Inside the directory run pip install
 
 ```
 pip install .
 ```
+
+create a .env file to connect a PostgreSQL database
+
+Example:
+
+```
+DB_USERNAME=postgres
+DB_PASSWORD=root
+DB_HOST=localhost
+DB_NAME=sfpd
+DB_PORT=5432
+SECRET_TOKEN=fake-super-secret-token
+```
+
+## installation
 
 After that you will have to install the database models
 
