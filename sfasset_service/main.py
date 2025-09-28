@@ -3,7 +3,6 @@ from fastapi import Depends, FastAPI
 from .dependencies import get_token_header
 from .internal import admin
 from .routers import (
-    items,
     users,
     entities,
     assets,
@@ -26,7 +25,6 @@ app = FastAPI()
 
 
 app.include_router(users.router)
-app.include_router(items.router)
 app.include_router(assetversions.router)
 app.include_router(assetfiles.router)
 app.include_router(assetlinks.router)

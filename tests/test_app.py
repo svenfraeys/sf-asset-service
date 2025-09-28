@@ -1,5 +1,5 @@
-import sfasset_service_old.app as app
+import sfasset_service.main
 
 
 def test_app():
-    assert app
+    assert sfasset_service.main.app
